@@ -1,0 +1,21 @@
+{
+  "name": "dump-contour",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^10.0.0",
+    "csvtojson": "^2.0.10",
+    "dicom-parser": "^1.8.21",
+    "dicom-to-json": "^1.2.1",
+    "glob": "^9.3.4",
+    "json2csv": "^6.0.0-alpha.2",
+    "jsonpath": "^1.1.1"
+  }
+}
