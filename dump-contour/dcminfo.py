@@ -31,8 +31,7 @@ pass
 class ContourInfo:
     def __init__(self, 
                  contourFilename: str,
-                 contourDcmInfos,
-                 nonContourDcmInfos
+                 contourDcmInfos
                  ):
         
         self.contourFilename = contourFilename
@@ -41,12 +40,6 @@ class ContourInfo:
             self.dcmInfoList = json.loads(json.dumps(contourDcmInfos), object_hook=lambda v: DcmInfo(**v))
         else:
             self.dcmInfoList = contourDcmInfos
-        pass
-
-        if isinstance(nonContourDcmInfos, list):
-            self.non_contour_dcm_info_list = json.loads(json.dumps(nonContourDcmInfos), object_hook=lambda v: DcmInfo(**v))
-        else:
-            self.non_contour_dcm_info_list = nonContourDcmInfos
         pass
 
     pass

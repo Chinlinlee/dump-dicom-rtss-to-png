@@ -3,6 +3,7 @@ Dump contour png file from json that contains contour and DICOM files pair
 dcm to contour tutorial from: "https://github.com/KeremTurgutlu/dicom-contour/blob/master/RT2MASK.ipynb"
 """
 
+import os
 import argparse
 import json
 from dcminfo import ContourInfo, DcmInfo
@@ -10,6 +11,7 @@ import pydicom as dicom
 import numpy as np
 from PIL import Image
 from collections import defaultdict
+import ijson
 
 # create empty dict for
 img_contours_dict = defaultdict(int)
@@ -53,6 +55,10 @@ def get_roi_contour_ds(rt_sequence, index):
         contours (list): list of ROI contour dicom.dataset.Dataset s
     """
     # index 0 means that we are getting RTV information
+    if index >= len(rt_sequence.ROIContourSequence): 
+        return None
+    pass
+
     ROI = rt_sequence.ROIContourSequence[index]
     # get contour datasets in a list
     contours = [contour for contour in ROI.ContourSequence]
@@ -154,81 +160,95 @@ def save_masks_to_list(contour_datasets, dcm_info: DcmInfo, index: int):
                 }
             pass
 
-            img_contours_dict[dcm_info.sopInstanceUID]["image"].append(image)
+            # img_contours_dict[dcm_info.sopInstanceUID]["image"].append(image)
+            mask_file_name = dcm_info.filename + "-mask.png"
+            if os.path.exists(mask_file_name):
+                print(f"overlap original image {mask_file_name}")
+                ori_image = Image.open(mask_file_name)
+                ori_image.paste(image, (0, 0), image)
+                ori_image.save(mask_file_name)
+            else:
+                image.save(mask_file_name)
+            pass
 
 
 pass
 
+def dump_non_contour(non_contour_dcm_info):
 
-parser = argparse.ArgumentParser(prog="ContourDumper",
-                                 description="Dump contour of dicom files")
+    # extract the image id corresponding to given contour
+    # read that dicom file
+    ds = dicom.read_file(non_contour_dcm_info.filename)
+    img_arr = ds.pixel_array
+    img_shape = img_arr.shape
 
-parser.add_argument("-i", "--input", type=str)
+    img_black = Image.new(mode='L', size=(img_shape), color=0)
 
+    mask_file_name = non_contour_dcm_info.filename + "-mask.png"
+    img_black.save(mask_file_name)
 
-args = parser.parse_args()
+    img_dict[non_contour_dcm_info.sopInstanceUID] = {
+        "image": non_contour_dcm_info.filename.replace(".dcm", ".png"),
+        "mask": mask_file_name
+    }
 
-dcm_info_json_file = args.input
-with open(dcm_info_json_file, "r") as fp:
-    dcm_info_json_list = json.loads(fp.read())
-    contour_info_list = []
-
-    for dcm_info_json in dcm_info_json_list:
-        contour_info_list.append(ContourInfo(**dcm_info_json))
-    pass
 
 pass
 
-for contour_info in contour_info_list:
-    contour_dataset = dicom.read_file(contour_info.contourFilename)
-    usable_contour_indices = get_usable_contour_indices(contour_dataset)
-
+def save_current_contour_mask(contour_dataset, usable_contour_indices):
     for usable_contour_index in usable_contour_indices:
         roi_contour_ds = get_roi_contour_ds(
             contour_dataset, usable_contour_index)
+        
+        if roi_contour_ds is None:
+            continue
+        pass
 
         for dcm_info in contour_info.dcmInfoList:
             save_masks_to_list(roi_contour_ds, dcm_info, usable_contour_index)
         pass
 
     pass
+pass
 
-    for non_contour_dcm_info in contour_info.non_contour_dcm_info_list:
-        # extract the image id corresponding to given contour
-        # read that dicom file
-        ds = dicom.read_file(non_contour_dcm_info.filename)
-        img_arr = ds.pixel_array
-        img_shape = img_arr.shape
 
-        img_black = Image.new(mode='L', size=(img_shape), color=0)
 
-        mask_file_name = non_contour_dcm_info.filename + "-mask.png"
-        img_black.save(mask_file_name)
+parser = argparse.ArgumentParser(prog="ContourDumper",
+                                 description="Dump contour of dicom files")
 
-        img_dict[non_contour_dcm_info.sopInstanceUID] = {
-            "image": non_contour_dcm_info.filename.replace(".dcm", ".png"),
-            "mask": mask_file_name
-        }
+parser.add_argument("-i", "--input", type=str, required=True, help="have contour json file")
+parser.add_argument("-nf", "--non-file", type=str, required=True, help="Non contour json file")
+
+
+args = parser.parse_args()
+
+dcm_info_json_file = args.input
+non_contour_dcm_json_file = args.non_file
+with open(dcm_info_json_file, "rb") as fp:
+    contour_info_list = []
+
+    for dcm_info_json in ijson.items(fp, "item"):
+        contour_info = ContourInfo(**dcm_info_json)
+
+        contour_dataset = dicom.read_file(contour_info.contourFilename)
+        usable_contour_indices = get_usable_contour_indices(contour_dataset)
+
+        print(f"save current contour mask to dict {contour_info.contourFilename}")
+        save_current_contour_mask(contour_dataset, usable_contour_indices)
+
+
+
     pass
+
 
 pass
 
-for instance_uid in img_contours_dict:
-    img_init = None
-    for index, img in enumerate(img_contours_dict[instance_uid]["image"]):
-        if index == 0:
-            img_init = img.copy()
-        else:
-            img_init.paste(img, (0, 0), img)
-        pass
+with open(non_contour_dcm_json_file, "rb") as fp:
+    for non_contour_dcm_info_json in ijson.items(fp, "item"):
+        non_contour_dcm_info = DcmInfo(**non_contour_dcm_info_json)
+        print(f"create non contour png {non_contour_dcm_info.filename}")
+        dump_non_contour(non_contour_dcm_info)
     pass
-    mask_file_name = img_contours_dict[instance_uid]["filename"] + "-mask.png"
-    img_init.save(mask_file_name)
-
-    img_dict[instance_uid] = {
-        "image": img_contours_dict[instance_uid]["filename"].replace(".dcm", ".png"),
-        "mask": mask_file_name
-    }
 pass
 
 with open("dataset.json", "w") as fp:
