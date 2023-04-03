@@ -13,6 +13,7 @@ from collections import defaultdict
 
 # create empty dict for
 img_contours_dict = defaultdict(int)
+img_dict = defaultdict(int)
 
 
 def get_usable_contour_indices(contour_dataset):
@@ -201,7 +202,13 @@ for contour_info in contour_info_list:
 
         img_black = Image.new(mode='L', size=(img_shape), color=0)
 
-        img_black.save(non_contour_dcm_info.filename + "-mask.png")
+        mask_file_name = non_contour_dcm_info.filename + "-mask.png"
+        img_black.save(mask_file_name)
+
+        img_dict[non_contour_dcm_info.sopInstanceUID] = {
+            "image": non_contour_dcm_info.filename.replace(".dcm", ".png"),
+            "mask": mask_file_name
+        }
     pass
 
 pass
@@ -215,6 +222,15 @@ for instance_uid in img_contours_dict:
             img_init.paste(img, (0, 0), img)
         pass
     pass
+    mask_file_name = img_contours_dict[instance_uid]["filename"] + "-mask.png"
+    img_init.save(mask_file_name)
 
-    img_init.save(img_contours_dict[instance_uid]["filename"] + "-mask.png")
+    img_dict[instance_uid] = {
+        "image": img_contours_dict[instance_uid]["filename"].replace(".dcm", ".png"),
+        "mask": mask_file_name
+    }
+pass
+
+with open("dataset.json", "w") as fp:
+    json.dump(img_dict, fp=fp, indent=4)
 pass
