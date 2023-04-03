@@ -30,10 +30,12 @@ const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dc
     console.log(`input directory: ${inputDir}`);
     console.log(`output file: ${outputFile}`);
 
-    let dicomData = await calculateProfileInDir(inputDir, `${outputFile}-full.${outputFileExt}`);
+    let dicomData = await calculateProfileInDir(inputDir, `${outputFile}.${outputFileExt}`);
+    console.log("save DICOM files' metadata finished");
 
     let haveContourDcmDumper = new HaveContourDcmDumper(dicomData);
     await haveContourDcmDumper.dump();
+    console.log("dump info finished");
 
     let writeStream = new fs.createWriteStream(`${outputFile}-contour-obj.json`);
     let pipeStream = await new JsonStreamStringify(haveContourDcmDumper.contourInfoArray).pipe(writeStream);
@@ -115,7 +117,10 @@ async function dcms2img(dicomData, modalities) {
     await jsDcm2Jpeg.init();
 
     for (let dcm of dicomData) {
-        if (modalities.includes(dcm.Modality)) await jsDcm2Jpeg.convert(dcm.filename, dcm.filename.replace(".dcm", ".png"));
+        if (modalities.includes(dcm.Modality)) {
+            console.log(`convert ${dcm.filename} to png`);
+            await jsDcm2Jpeg.convert(dcm.filename, dcm.filename.replace(".dcm", ".png"));
+        }
     }
 }
 

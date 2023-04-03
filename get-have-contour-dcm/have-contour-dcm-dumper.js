@@ -23,7 +23,9 @@ class HaveContourDcmDumper {
         for (let data of this.dicomDataArray) {
             let { filename, Modality } = data;
             if (Modality === "RTSTRUCT") {
+                console.log(`Start getting Contour's DICOM mapping from ${filename}`)
                 let contour = await this.getContour(filename);
+                console.log(`End getting Contour's DICOM mapping from ${filename}`)
                 this.contourInfoArray.push(contour);
             }
         }
@@ -79,7 +81,9 @@ class HaveContourDcmDumper {
         let instanceUidNodes = jp.nodes(this.dicomDataArray, `$..SOPInstanceUID`);
 
         let haveContourNodes = instanceUidNodes.filter(v => uidArr.includes(v.value));
-        let nonContourNodes = instanceUidNodes.filter(v => !uidArr.includes(v.value));
+        let nonContourNodes = instanceUidNodes.filter(v => 
+            !uidArr.includes(v.value)
+        );
 
         for (let node of haveContourNodes) {
             let field = node.path.slice(1, 2).join(".");
@@ -90,9 +94,11 @@ class HaveContourDcmDumper {
         for(let node of nonContourNodes) {
             let field = node.path.slice(1, 2).join(".");
             let obj = _.get(this.dicomDataArray, field);
-            if (obj.Modality === "MR" && !this.nonContourObjArray.find(v=> v.SOPInstanceUID == obj.SOPInstanceUID))
+            if (obj.Modality === "MR")
                 this.nonContourObjArray.push(obj);
         }
+
+        this.nonContourObjArray = _.uniqBy(this.nonContourObjArray, "SOPInstanceUID");
 
         return haveContourObjArray;
     }
