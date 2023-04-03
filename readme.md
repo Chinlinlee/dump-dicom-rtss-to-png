@@ -34,16 +34,16 @@ node index.js -d dirPath -o xxx.csv --dcm2img
 > **Note**
 > - 請將 dirPath 轉換成您含有 DICOM 檔案的資料夾路徑
 > - 請將 xxx.csv 轉換成您想匯出的 csv 檔案路徑
-> - 完成後將會有 `xxx-full.csv`, `xxx-contour-obj.json` 檔案
+> - 完成後將會有 `xxx.csv`, `xxx-contour-obj.json`, `xxx-non-contour-obj.json` 檔案
 
 ### Step 2 匯出 DICOM RTSS 的 contour PNG
 - 使用以下指令匯出
 ```bash
-python dump-contour/index.py -i ./xxx-contour-obj.json
+python dump-contour/index.py -i ./xxx-contour-obj.json -nf ./xxx-non-contour-obj.json
 ```
 
 > **Note**
-> - 請將 xxx-contour-obj.json 替換成您上一步驟匯出的 json 檔案名稱
+> - 請將 xxx-contour-obj.json 以及 xxx-non-contour-obj.json 替換成您上一步驟匯出的 json 檔案名稱
 
 ## 產生結果
 - 產生結果如下 (含 dcm2img)
