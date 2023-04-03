@@ -43,10 +43,6 @@ const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dc
     let nonContourWriteStream = new fs.createWriteStream(`${outputFile}-non-contour-obj.json`);
     let nonContourPipeStream = new JsonStreamStringify(haveContourDcmDumper.nonContourObjArray).pipe(nonContourWriteStream);
 
-    if (options.dcm2img) {
-        await dcms2img(dicomData, modalities);
-    }
-
     pipeStream.on("finish", ()=> {
         console.log("have contour json stringify completed");
     });
@@ -54,6 +50,10 @@ const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dc
     nonContourPipeStream.on("finish", () => {
         console.log("non contour json stringify completed");
     });
+
+    if (options.dcm2img) {
+        await dcms2img(dicomData, modalities);
+    }
     
 })();
 
