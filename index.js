@@ -5,6 +5,7 @@ const glob = require("glob");
 const DICOMParser = require("dicom-parser");
 const fs = require("fs");
 const { Parser } = require("json2csv");
+const { JsonStreamStringify }  = require("json-stream-stringify");
 const { profile } = require("./dump-csv/config");
 const { JsDcm2Jpeg } = require("./dcm4che/Dcm2Jpeg");
 const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dcm-dumper");
@@ -34,12 +35,24 @@ const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dc
     let haveContourDcmDumper = new HaveContourDcmDumper(dicomData);
     await haveContourDcmDumper.dump();
 
-    fs.writeFileSync(`${outputFile}-contour-obj.json`, JSON.stringify(haveContourDcmDumper.contourInfoArray, null, 4));
+    let writeStream = new fs.createWriteStream(`${outputFile}-contour-obj.json`);
+    let pipeStream = await new JsonStreamStringify(haveContourDcmDumper.contourInfoArray).pipe(writeStream);
+
+    let nonContourWriteStream = new fs.createWriteStream(`${outputFile}-non-contour-obj.json`);
+    let nonContourPipeStream = new JsonStreamStringify(haveContourDcmDumper.nonContourObjArray).pipe(nonContourWriteStream);
 
     if (options.dcm2img) {
         await dcms2img(dicomData, modalities);
     }
-    process.exit(0);
+
+    pipeStream.on("finish", ()=> {
+        console.log("have contour json stringify completed");
+    });
+
+    nonContourPipeStream.on("finish", () => {
+        console.log("non contour json stringify completed");
+    });
+    
 })();
 
 async function calculateProfileInDir(inputDir, outputFile) {

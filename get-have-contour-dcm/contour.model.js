@@ -14,17 +14,13 @@ class Contour {
 
         /** @type {DicomData[]} */
         this.contourDcmInfos = contourDcmInfos;
-
-        /** @type {DicomData[]} */
-        this.nonContourDcmInfos = nonContourDcmInfos;
     }
 
     getJson() {
 
         return {
             contourFilename: this.contourFilename,
-            contourDcmInfos: this.contourDcmInfos,
-            nonContourDcmInfos :this.nonContourDcmInfos
+            contourDcmInfos: this.contourDcmInfos
         };
 
     }

@@ -14,6 +14,8 @@ class HaveContourDcmDumper {
         this.dicomDataArray = dicomDataArray;
         /** @type {Contour[]} */
         this.contourInfoArray = [];
+
+        this.nonContourObjArray = [];
     }
 
 
@@ -41,12 +43,9 @@ class HaveContourDcmDumper {
         let isSkull = roiNameNodes.pop().value[0].toLowerCase().includes("skull");
         if (isSkull) contourSequenceNodes.pop();
 
-        let {
-            haveContourObjArray,
-            nonContourObjArray
-        } = await this.getDcmsInfo(contourSequenceNodes);
+        let haveContourObjArray = await this.getDcmsInfo(contourSequenceNodes);
 
-        let contour = new Contour(filename, haveContourObjArray, nonContourObjArray);
+        let contour = new Contour(filename, haveContourObjArray);
 
         return contour;
     }
@@ -63,7 +62,7 @@ class HaveContourDcmDumper {
                 }
             }
 
-            return await this.getDicomFileFromContourArray(_.uniq(contourUidGroup));;
+            return await this.getDicomFileFromContourArray(_.uniq(contourUidGroup));
         } catch (e) {
             throw e;
         }
@@ -76,7 +75,6 @@ class HaveContourDcmDumper {
     async getDicomFileFromContourArray(uidArr) {
 
         let haveContourObjArray = [];
-        let nonContourObjArray = [];
 
         let instanceUidNodes = jp.nodes(this.dicomDataArray, `$..SOPInstanceUID`);
 
@@ -92,14 +90,11 @@ class HaveContourDcmDumper {
         for(let node of nonContourNodes) {
             let field = node.path.slice(1, 2).join(".");
             let obj = _.get(this.dicomDataArray, field);
-            if (obj.Modality === "MR")
-                nonContourObjArray.push(obj);
+            if (obj.Modality === "MR" && !this.nonContourObjArray.find(v=> v.SOPInstanceUID == obj.SOPInstanceUID))
+                this.nonContourObjArray.push(obj);
         }
 
-        return {
-            haveContourObjArray,
-            nonContourObjArray
-        };
+        return haveContourObjArray;
     }
 
 }
