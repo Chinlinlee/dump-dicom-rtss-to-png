@@ -9,6 +9,7 @@ const { JsonStreamStringify }  = require("json-stream-stringify");
 const { profile } = require("./dump-csv/config");
 const { JsDcm2Jpeg } = require("./dcm4che/Dcm2Jpeg");
 const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dcm-dumper");
+const { java } = require("./dcm4che/java-instance");
 (async () => {
     program.requiredOption("-d, --dir <string>", "The input directory that you want to dump profile of all DICOM files");
     program.requiredOption("-o, --output-file <string>", "The output CSV destination");
@@ -53,6 +54,7 @@ const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dc
 
     if (options.dcm2img) {
         await dcms2img(dicomData, modalities);
+        java.clearDaemonProxies();
     }
     
 })();
