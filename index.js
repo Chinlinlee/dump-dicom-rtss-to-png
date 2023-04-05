@@ -9,6 +9,7 @@ const { JsonStreamStringify }  = require("json-stream-stringify");
 const { profile } = require("./dump-csv/config");
 const { JsDcm2Jpeg } = require("./dcm4che/Dcm2Jpeg");
 const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dcm-dumper");
+const { NonContourDcmDumper } = require("./get-have-contour-dcm/non-contour-dcm-dumper");
 const { java } = require("./dcm4che/java-instance");
 (async () => {
     program.requiredOption("-d, --dir <string>", "The input directory that you want to dump profile of all DICOM files");
@@ -36,13 +37,17 @@ const { java } = require("./dcm4che/java-instance");
 
     let haveContourDcmDumper = new HaveContourDcmDumper(dicomData);
     await haveContourDcmDumper.dump();
-    console.log("dump info finished");
+    console.log("dump have contour's DICOM files' info finished");
+
+    let nonContourDcmDumper = new NonContourDcmDumper(dicomData, haveContourDcmDumper.contourInfoArray);
+    await nonContourDcmDumper.dump();
+    console.log("dump non contour's DICOM files' info finished");
 
     let writeStream = new fs.createWriteStream(`${outputFile}-contour-obj.json`);
     let pipeStream = await new JsonStreamStringify(haveContourDcmDumper.contourInfoArray).pipe(writeStream);
 
     let nonContourWriteStream = new fs.createWriteStream(`${outputFile}-non-contour-obj.json`);
-    let nonContourPipeStream = new JsonStreamStringify(haveContourDcmDumper.nonContourObjArray).pipe(nonContourWriteStream);
+    let nonContourPipeStream = new JsonStreamStringify(nonContourDcmDumper.nonContourObjArray).pipe(nonContourWriteStream);
 
     pipeStream.on("finish", ()=> {
         console.log("have contour json stringify completed");

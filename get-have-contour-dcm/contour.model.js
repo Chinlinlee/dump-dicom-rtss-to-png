@@ -5,10 +5,9 @@ class Contour {
      * 
      * @param {string} contourFilename 
      * @param {DicomData[]} contourDcmInfos
-     * @param {DicomData[]} nonContourDcmInfos
      * @param
      */
-    constructor(contourFilename, contourDcmInfos, nonContourDcmInfos) {
+    constructor(contourFilename, contourDcmInfos) {
         /** @type {string} */
         this.contourFilename = contourFilename;
 

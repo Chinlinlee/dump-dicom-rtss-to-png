@@ -15,7 +15,6 @@ class HaveContourDcmDumper {
         /** @type {Contour[]} */
         this.contourInfoArray = [];
 
-        this.nonContourObjArray = [];
     }
 
 
@@ -34,7 +33,6 @@ class HaveContourDcmDumper {
     async getContour(filename) {
         let dicomJson = await dcm2JsonNative(filename);
 
-        let studyInstanceUID = dicomJson["0020000D"]["Value"][0];
         let contourSequenceNodes = jp.nodes(dicomJson, "$..30060040");
 
         // remove skull contour
@@ -45,14 +43,14 @@ class HaveContourDcmDumper {
         let isSkull = roiNameNodes.pop().value[0].toLowerCase().includes("skull");
         if (isSkull) contourSequenceNodes.pop();
 
-        let haveContourObjArray = await this.getDcmsInfo(contourSequenceNodes, studyInstanceUID);
+        let haveContourObjArray = await this.getDcmsInfo(contourSequenceNodes);
 
         let contour = new Contour(filename, haveContourObjArray);
 
         return contour;
     }
 
-    async getDcmsInfo(contourSequenceNodes, studyInstanceUID) {
+    async getDcmsInfo(contourSequenceNodes) {
         let contourUidGroup = [];
         try {
             for (let node of contourSequenceNodes) {
@@ -64,7 +62,7 @@ class HaveContourDcmDumper {
                 }
             }
 
-            return await this.getDicomFileFromContourArray(_.uniq(contourUidGroup), studyInstanceUID);
+            return await this.getDicomFileFromContourArray(_.uniq(contourUidGroup));
         } catch (e) {
             throw e;
         }
@@ -73,32 +71,20 @@ class HaveContourDcmDumper {
     /**
      * 
      * @param {string[]} uidArr
-     * @param {string} studyInstanceUID
      */
-    async getDicomFileFromContourArray(uidArr, studyInstanceUID) {
+    async getDicomFileFromContourArray(uidArr) {
 
         let haveContourObjArray = [];
 
         let instanceUidNodes = jp.nodes(this.dicomDataArray, `$..SOPInstanceUID`);
 
         let haveContourNodes = instanceUidNodes.filter(v => uidArr.includes(v.value));
-        let nonContourObj = this.dicomDataArray.filter(v => 
-            !uidArr.includes(v.SOPInstanceUID) &&
-            v.StudyInstanceUID == studyInstanceUID
-        );
 
         for (let node of haveContourNodes) {
             let field = node.path.slice(1, 2).join(".");
             let obj = _.get(this.dicomDataArray, field);
             haveContourObjArray.push(obj);
         }
-
-        for(let obj of nonContourObj) {
-            if (obj.Modality === "MR")
-                this.nonContourObjArray.push(obj);
-        }
-
-        this.nonContourObjArray = _.uniqBy(this.nonContourObjArray, "SOPInstanceUID");
 
         return haveContourObjArray;
     }
