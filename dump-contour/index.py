@@ -119,7 +119,7 @@ def contour2poly(contour_dataset, dcm_info: DcmInfo):
 pass
 
 
-def poly_to_mask(polygon, width, height):
+def poly_to_mask(polygon, height, width):
     from PIL import Image, ImageDraw
 
     """Convert polygon to mask
@@ -190,9 +190,9 @@ def dump_non_contour(non_contour_dcm_info):
     # read that dicom file
     ds = dicom.read_file(non_contour_dcm_info.filename)
     img_arr = ds.pixel_array
-    img_shape = img_arr.shape
+    height, width = img_arr.shape
 
-    img_black = Image.new(mode='L', size=(img_shape), color=0)
+    img_black = Image.new(mode='L', size=(width, height), color=0)
 
     mask_file_name = non_contour_dcm_info.filename + "-mask.png"
     img_black.save(mask_file_name)
