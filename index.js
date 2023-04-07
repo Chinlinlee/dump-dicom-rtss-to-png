@@ -8,6 +8,8 @@ const { Parser } = require("json2csv");
 const { JsonStreamStringify }  = require("json-stream-stringify");
 const { profile } = require("./dump-csv/config");
 const { JsDcm2Jpeg } = require("./dcm4che/Dcm2Jpeg");
+const { Dcm2JpgExecutor } = require("./dcm4che/wrapper/org/github/chinlinlee/dcm2jpg/Dcm2JpgExecutor");
+const { Dcm2JpgExecutor$Dcm2JpgOptions } = require("./dcm4che/wrapper/org/github/chinlinlee/dcm2jpg/Dcm2JpgExecutor$Dcm2JpgOptions");
 const { HaveContourDcmDumper } = require("./get-have-contour-dcm/have-contour-dcm-dumper");
 const { NonContourDcmDumper } = require("./get-have-contour-dcm/non-contour-dcm-dumper");
 const { java } = require("./dcm4che/java-instance");
@@ -117,16 +119,15 @@ async function calculateProfileInDir(inputDir, outputFile) {
 }
 
 async function dcms2img(dicomData, modalities) {
-    let jsDcm2Jpeg = new JsDcm2Jpeg({
-        ...JsDcm2Jpeg.defaultOptions,
-        format: "PNG"
-    });
-    await jsDcm2Jpeg.init();
+
+    /** @type { Dcm2JpgExecutor$Dcm2JpgOptions } */
+    let opt = await Dcm2JpgExecutor$Dcm2JpgOptions.newInstanceAsync();
+    opt.format = "PNG";
 
     for (let dcm of dicomData) {
         if (modalities.includes(dcm.Modality)) {
             console.log(`convert ${dcm.filename} to png`);
-            await jsDcm2Jpeg.convert(dcm.filename, dcm.filename.replace(".dcm", ".png"));
+            await Dcm2JpgExecutor.convertDcmToJpgFromFilename(dcm.filename, dcm.filename.replace(".dcm", ".png"), opt);
         }
     }
 }
