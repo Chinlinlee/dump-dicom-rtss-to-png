@@ -1,7 +1,7 @@
-const { dcm2json } = require("dicom-to-json");
 const jp = require("jsonpath");
 const _ = require("lodash");
 const { Contour } = require("./contour.model");
+const { dcm2JsonNative } = require("./utils");
 
 async function getContour(filename, dcmsInfo) {
     try {
@@ -75,17 +75,6 @@ async function getDicomFileFromContourArray(uidArr, data) {
         haveContourObjArray.push(obj);
     }
     return haveContourObjArray;
-}
-
-async function dcm2JsonNative(filename) {
-    return new Promise((resolve, reject) => {
-        dcm2json(filename, function (dicomJsonStr) {
-            dicomJsonStr = dicomJsonStr.replace(/,\\u0000/g, '');
-            dicomJsonStr = dicomJsonStr.replace(/\\u0000/g, '');
-            let dicomJson = JSON.parse(dicomJsonStr);
-            return resolve(dicomJson);
-        });
-    });
 }
 
 module.exports.getContour = getContour;

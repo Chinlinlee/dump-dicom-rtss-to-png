@@ -1,6 +1,6 @@
 require("./typdef");
 const { Contour } = require("./contour.model");
-const { dcm2json } = require("dicom-to-json");
+const { dcm2JsonNative } = require("./utils");
 const jp = require("jsonpath");
 const _ = require("lodash");
 
@@ -91,15 +91,5 @@ class HaveContourDcmDumper {
 
 }
 
-async function dcm2JsonNative(filename) {
-    return new Promise((resolve, reject) => {
-        dcm2json(filename, function (dicomJsonStr) {
-            dicomJsonStr = dicomJsonStr.replace(/,\\u0000/g, '');
-            dicomJsonStr = dicomJsonStr.replace(/\\u0000/g, '');
-            let dicomJson = JSON.parse(dicomJsonStr);
-            return resolve(dicomJson);
-        });
-    });
-}
 
 module.exports.HaveContourDcmDumper = HaveContourDcmDumper;
