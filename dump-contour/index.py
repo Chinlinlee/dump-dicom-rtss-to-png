@@ -60,6 +60,10 @@ def get_roi_contour_ds(rt_sequence, index):
     pass
 
     ROI = rt_sequence.ROIContourSequence[index]
+
+    if "ContourSequence" not in ROI:
+        return None
+    pass
     # get contour datasets in a list
     contours = [contour for contour in ROI.ContourSequence]
     return contours
