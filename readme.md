@@ -39,7 +39,7 @@ node index.js -d dirPath -o xxx.csv --dcm2img
 ### Step 2 匯出 DICOM RTSS 的 contour PNG
 - 使用以下指令匯出
 ```bash
-python dump-contour/index.py -i ./xxx-contour-obj.json -nf ./xxx-non-contour-obj.json
+python python/dump_contour.py -i ./xxx-contour-obj.json -nf ./xxx-non-contour-obj.json
 ```
 
 > **Note**
