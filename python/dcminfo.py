@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Union
 import json
 
 class DcmInfo:
@@ -31,7 +31,7 @@ pass
 class ContourInfo:
     def __init__(self, 
                  contourFilename: str,
-                 contourDcmInfos
+                 contourDcmInfos: Union[list, List[DcmInfo]]
                  ):
         
         self.contourFilename = contourFilename
