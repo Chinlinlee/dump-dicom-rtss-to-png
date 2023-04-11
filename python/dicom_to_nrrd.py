@@ -19,7 +19,7 @@ parser.add_argument("-sp", "--slicer-path", type=str, required=True)
 
 args = parser.parse_args()
 
-def do_dcm_rt2nii(rt_folder):
+def do_dcm2nrrd(rt_folder, series_path):
     current_path = os.path.dirname(os.path.abspath(__file__))
     script_path = os.path.join(current_path, "./slicer/index.py")
 
@@ -37,7 +37,9 @@ def do_dcm_rt2nii(rt_folder):
         "--input-folder",
         rt_folder,
         "--output-folder",
-        rt_folder
+        rt_folder,
+        "--ref-dicom-folder",
+        series_path
     ]
     print(commands)
 
@@ -45,20 +47,6 @@ def do_dcm_rt2nii(rt_folder):
     p.communicate()
 pass
 
-def do_dcm2nii(series_path):
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    output_name = os.path.basename(series_path)
-
-    if sys.platform.startswith("linux"):
-        binary_path = os.path.join(current_path, "dcm2nii_binary", "dcm2niix")
-        command = f"{binary_path} -b n -z n -f {output_name} {series_path}"
-    elif sys.platform.startswith("win"):
-        binary_path = os.path.join(current_path, "dcm2nii_binary", "dcm2niix.exe")
-        command = f"{binary_path} -b n -z n -f {output_name} {series_path}"
-    pass
-
-    os.system(command=command)
-pass
 
 dcm_info_json_file = args.input
 with open(dcm_info_json_file, "rb") as fp:
@@ -70,10 +58,9 @@ with open(dcm_info_json_file, "rb") as fp:
             continue
         
         series_data_path = os.path.dirname(contour_info.dcmInfoList[0].filename)
-        print(f"convert contour {contour_info.contourFilename}")
-        do_dcm_rt2nii(os.path.dirname(contour_info.contourFilename))
-        print(f"convert series {series_data_path} to nii")
-        do_dcm2nii(series_data_path)
+        print(f"convert series {series_data_path}, mask {contour_info.contourFilename} to nrrd")
+        do_dcm2nrrd(os.path.dirname(contour_info.contourFilename), series_data_path)
+
     pass
 
 pass
