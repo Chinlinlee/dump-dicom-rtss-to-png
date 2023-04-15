@@ -18,8 +18,13 @@ def get_nii_path(rt_path):
 
     if len(nrrd_paths) <= 1:
         return None, None
+    
+    volume = [item for item in nrrd_paths if "refVolume" in item][0]
+    label = [item for item in nrrd_paths if "refVolume" not in item]
+    if len(label) == 0:
+        return None, None
 
-    return nrrd_paths[0], nrrd_paths[1]
+    return volume, label
 
 
 pass
